@@ -1,1 +1,1 @@
-# Magnet_Wars
+# Magnetic_Wars
