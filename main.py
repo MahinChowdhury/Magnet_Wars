@@ -101,7 +101,7 @@ def open_popup2(st):
         restartgame()
     popup2 = Toplevel(root)
     popup2.title("Results")
-    center_window(popup2, 600, 100)
+    center_window(popup2, 600, 130)
     popup2.grab_set()
     popup2.transient(root)  # Set the pop-up window as a temporary window for the root window
     popup2.lift()  # Bring the pop-up window to the front
@@ -110,9 +110,9 @@ def open_popup2(st):
     # Add a label to the pop-up window
     frame11 = Frame(popup2)
     frame11.pack()
-    titleLabel1 = Label(frame11 , text=st , font=("Arial" , 18) , bg="#FFFDD0" , width=32 )
-    titleLabel1.grid(row=0 , column=0)
-    close_button = Button(popup2, text="Close", bg="A7C7E7" ,command=option1)
+    titleLabel1 = Label(frame11 , text=st , font=("Arial" , 24) , bg="#63B8DE" , width=32 )
+    titleLabel1.grid(row=1 , column=0,padx=10,pady=10)
+    close_button = Button(popup2, text="Close",font = ("Arial",16) ,  bg="#A7C7E7" ,command=option1)
     close_button.pack(pady=10)
     
 
