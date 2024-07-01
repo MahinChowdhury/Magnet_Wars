@@ -21,6 +21,84 @@ turn = BLACK
 GAMEOVER = False
 choice=1
 
+tot_moves  = 0
+
+def fuzzy(tot_moves,score) -> int :
+    moves = {"bad":0.0, "avg":0.0, "good":0.0}
+    score = score//5
+    if tot_moves<=8:
+        moves["bad"]=1
+    elif tot_moves<=10:
+        moves["bad"]=(10-tot_moves)/2
+        moves["avg"]=(tot_moves-8)/2
+    elif tot_moves<=15:
+        moves["avg"]=1
+    elif tot_moves<=20:
+        moves["avg"]=(20-tot_moves)/5
+        moves["good"]=(tot_moves-15)/5
+    else:
+        moves["good"]=1
+
+    scores = {"bad":0.0, "avg":0.0, "good":0.0}
+    if score<=10:
+        scores["bad"]=1
+    elif score<=20:
+        scores["bad"]=(20-score)/10
+        scores["avg"]=(score-10)/10
+    elif score<=40:
+        scores["avg"]=1
+    elif score<=60:
+        scores["avg"]=(60-score)/20
+        scores["good"]=(score-40)/20
+    else:
+        scores["good"]=1
+
+    bad1=min(moves["bad"],scores["bad"])
+    bad2=min(moves["bad"],scores["avg"])
+    bad3=min(moves["avg"],scores["bad"])
+    bad=max(bad1,bad2,bad3)
+
+    print("bad",bad)
+
+    avg1=min(moves["avg"],scores["avg"])
+    print(avg1)
+    avg2=min(moves["bad"],scores["good"])
+    avg3=min(moves["good"],scores["bad"])
+    avg=max(avg1,avg2,avg3)
+    print("avg",avg)
+
+    fair1=min(moves["avg"],scores["good"])
+    fair2=min(moves["good"],scores["avg"])
+    fair=max(fair1,fair2)
+    print("fair",fair)
+
+    good=min(moves["good"],scores["good"])
+    print("good",good)
+    up=0
+    down=0
+    for i in range(0,101):
+        if i<=10:
+            up+=(bad*i)
+            down+=bad
+        elif i<=50:
+            up+=(avg*i)
+            down+=avg
+        elif i<=70:
+            up+=(fair*i)
+            down+=fair
+        else:
+            up+=(good*i)
+            down+=good
+    
+    print("up",up)
+    print("down",down)
+    final_score = up//down
+    return final_score
+
+res = fuzzy(14,190)
+print("Fuzzy Debug :  " , res)
+
+
 def center_window(window, width, height):
     screen_width = window.winfo_screenwidth()
     screen_height = window.winfo_screenheight()
@@ -29,7 +107,7 @@ def center_window(window, width, height):
     window.geometry(f'{width}x{height}+{x}+{y}')
 
 def open_popup():
-    global position
+    global position,tot_moves
     position = [[' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
                 [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
                 [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
@@ -47,6 +125,7 @@ def open_popup():
     turn = BLACK
     GAMEOVER = False
     choice=1
+    tot_moves = 0
 
     def option1():
         global choice
@@ -79,9 +158,9 @@ def open_popup():
     frame11 = Frame(popup)
     frame11.pack()
     titleLabel1 = Label(frame11 , text="Choose game type" , font=("Arial" , 26) , bg="#63B8DE" , width=16 )
-    titleLabel1.grid(row=0 , column=0)
+    titleLabel1.grid(row=0 , column=0,pady=10)
     
-    frame22 = Frame(popup , bg="yellow")
+    frame22 = Frame(popup)
     frame22.pack()
 
     choiceButton1 = Button(frame22 , text="Player vs Player" , width=24 , height=1 , font=("Arial" , 20) , bg="#FFFDD0" , relief=RAISED , borderwidth=5 , command=option1 )
@@ -94,14 +173,14 @@ def open_popup():
 
 
 
-def open_popup2(st):
+def open_popup2(st,st2):
 
     def option1():
         popup2.destroy()
         restartgame()
     popup2 = Toplevel(root)
     popup2.title("Results")
-    center_window(popup2, 600, 130)
+    center_window(popup2, 600, 180)
     popup2.grab_set()
     popup2.transient(root)  # Set the pop-up window as a temporary window for the root window
     popup2.lift()  # Bring the pop-up window to the front
@@ -112,12 +191,14 @@ def open_popup2(st):
     frame11.pack()
     titleLabel1 = Label(frame11 , text=st , font=("Arial" , 24) , bg="#63B8DE" , width=32 )
     titleLabel1.grid(row=1 , column=0,padx=10,pady=10)
+    titleLabel2 = Label(frame11 , text=st2 , font=("Arial" , 24) , bg="#63B8DE" , width=32 )
+    titleLabel2.grid(row=2 , column=0)
     close_button = Button(popup2, text="Close",font = ("Arial",16) ,  bg="#A7C7E7" ,command=option1)
     close_button.pack(pady=10)
     
 
 root = Tk()
-center_window(root, 600, 780)
+center_window(root, 620, 780)
 root.title("Magnet Wars")
 
 root.resizable(0,0)
@@ -127,9 +208,22 @@ frame1.pack()
 titleLabel = Label(frame1 , text="Magnet Wars" , font=("Arial" , 26) , bg="#5dbea3" , width=16 )
 titleLabel.grid(row=0 , column=0)
 
-frame2 = Frame(root)
-frame2.pack(pady=10) 
-frame2.pack()
+
+outer_frame = Frame(root)
+outer_frame.pack(pady=10)
+
+vertical_text = "\n".join("MAGNETS")
+# Left label
+leftLabel = Label(outer_frame, text=vertical_text, font=("Arial", 26))
+leftLabel.grid(row=0, column=0)
+
+# Frame2
+frame2 = Frame(outer_frame)  # Change bg to your preferred color
+frame2.grid(row=0, column=1,padx=10)
+
+# Right label
+rightLabel = Label(outer_frame, text=vertical_text, font=("Arial", 26))
+rightLabel.grid(row=0, column=2)
 
 open_popup()
 
@@ -174,6 +268,47 @@ def evaluate(board) -> int:
             elif (window[0, 0] + window[1, 1] + window[2, 2] + window[3, 3] + window[4, 4]) == -5 or (
                     window[4, 0] + window[3, 1] + window[2, 2] + window[1, 3] + window[0, 4]) == -5:
                 score += -100000
+    return score
+
+
+def evaluate2(board,turn) -> int:
+    window = np.array([0] * 5)  # Sliding Window of 5
+
+    score = 0  # Score of the board currently
+    # Horizontal windows of 5  checked
+    for row in range(0, 8):
+        for column in range(0, 4):
+            window = board[row, column:column + 5]
+            if turn == BLACK:
+                if column<2:
+                    score += 1 * max(0,window[0]) + 2 * max(0,window[1]) + 3 * max(0,window[2]) + 4 * max(0,window[3]) + 5 * max(0,window[4])  # Score of the max              
+                else:
+                    score += 5 * max(0,window[0]) + 4 * max(0,window[1]) + 3 * max(0,window[2]) + 2 * max(0,window[3]) + 1 * max(0,window[4])  # Score of the window
+            else:
+                if column<2:
+                    score += (-1) * min(0,window[0]) + (-2) * min(0,window[1]) + (-3) * min(0,window[2]) + (-4) * min(0,window[3]) + (-5) * min(0,window[4])  # Score of the min(0,window
+                else:
+                    score += (-5) * min(0,window[0]) + (-4) * min(0,window[1]) + (-3) * min(0,window[2]) + (-2) * min(0,window[3]) + (-1) * min(0,window[4])  # Score of the window
+    # Vertical windows of 5 checked
+    for column in range(0, 8):
+        for row in range(0, 4):
+            window = board[row:row + 5, column]
+            if turn==BLACK:
+                score += 1 * max(0,window[0]) + 2 * max(0,window[1]) + 3 * max(0,window[2]) + 2 * max(0,window[3]) + 1 * max(0,window[4])  # Score of the window
+            else:
+                score += (-1) * min(0,window[0]) + (-2) * min(0,window[1]) + (-3) * min(0,window[2]) + (-2) * min(0,window[3]) + (-1) * min(0,window[4])
+
+    # Diagonal windows of 5 checked
+    for row in range(4, 8):
+        for column in range(0, 4):
+            window = board[row - 4:row + 1, column:column + 5]
+            if turn==BLACK:
+                score += 1 * max(0,window[0, 0]) + 2 * max(0,window[1, 1]) + 3 * max(0,window[2, 2]) + 2 * max(0,window[3, 3]) + 1 * max(0,window[4, 4])
+                score += 1 * max(0,window[4, 0]) + 2 * max(0,window[3, 1]) + 3 * max(0,window[2, 2]) + 2 * max(0,window[1, 3]) + 1 * max(0,window[0, 4])
+            else:
+                score += (-1) * min(0,window[0, 0]) + (-2) * min(0,window[1, 1]) + (-3) * min(0,window[2, 2]) + (-2) * min(0,window[3, 3]) + (-1) * min(0,window[4, 4])
+                score += (-1) * min(0,window[4, 0]) + (-2) * min(0,window[3, 1]) + (-3) * min(0,window[2, 2]) + (-2) * min(0,window[1, 3]) + (-1) * min(0,window[0, 4]) 
+
     return score
 
 
@@ -308,7 +443,6 @@ def is_legal(row, column):  # Checks if the move is legal
 # Method to check if the game is over
 def is_over(board, turn):  # Checks if the game is over
     # Checking for 5 in a row vertically
-    # Checks all the possible places a 5 in a row could start
     for column in range(0, 8):
         for row in range(0, 4):
             if board[row, column] == turn \
@@ -354,7 +488,7 @@ def is_over(board, turn):  # Checks if the game is over
     return False
 
 def restartgame():
-    print("hoise vai")
+    #print("hoise vai")
     for row in range(0,8):
         for column in range(0,8):
             buttons[row*8+column]["text"]=" "
@@ -362,12 +496,8 @@ def restartgame():
 
 
 
-
-
-
-
 def play(event):
-    global turn,GAMEOVER
+    global turn,GAMEOVER,tot_moves
     if GAMEOVER:
         return
     
@@ -416,24 +546,32 @@ def play(event):
                         button["text"]="■"
                         board[row, col] = BLACK
                         turn = WHITE
+                        tot_moves+=1
                         GAMEOVER = is_over(board, BLACK)
                 
-                print_grid()
-                print(f'Board Evaluation +ve:BLACK, -ve(WHITE): {evaluate(board)}')
+                #print_grid()
+                #print(f'Board Evaluation +ve:BLACK, -ve(WHITE): {evaluate(board)}')
                     
                 if GAMEOVER:
                     print('==============================================')
                     print("Black won!")
                     print('==============================================')
+                    print(tot_moves)
                     st="Player1(Black) Has Won The Game"
-                    open_popup2(st)
+                    game_score = evaluate2(board,WHITE)
+                    print(game_score)
+                    fzy_result = fuzzy(tot_moves,game_score)
+                    print(fzy_result)
+                    st2="player2 score: "+str(fzy_result)
+                    open_popup2(st,st2)
                     #restartgame()
                 if np.all(board):
                     st="The game finished in a draw"
-                    open_popup2(st)
+                    st2=""
+                    open_popup2(st,st2)
                     #restartgame()
                     print("Draw!")
-            if turn == WHITE:
+            elif turn == WHITE:
                 
                 if col in range(0,8) and row in range(0, 8):
                     if is_legal(row, col):
@@ -443,19 +581,25 @@ def play(event):
                         turn = BLACK
                         GAMEOVER = is_over(board, WHITE)
                     
-                    print(f'Board Evaluation +ve:BLACK, -ve(WHITE): {evaluate(board)}')
-                    # print(board)
+                    
                     if GAMEOVER:
                         print('==============================================')
                         print("White won!")
                         print('==============================================')
+                        print(tot_moves)
                         st="Player2(White) Has Won The Game"
-                        open_popup2(st)
+                        game_score = evaluate2(board,BLACK)
+                        print(game_score)
+                        fzy_result = fuzzy(tot_moves,game_score)
+                        print(fzy_result)
+                        st2="player1 score: "+str(fzy_result)
+                        open_popup2(st,st2)
                         #restartgame()
                         
                     if np.all(board):
                         st="The game finished in a draw"
-                        open_popup2(st)
+                        st2=""
+                        open_popup2(st,st2)
                         #restartgame()
                         print("Draw!")
 
@@ -470,35 +614,35 @@ def play(event):
                         button["text"]="■"
                         board[row, col] = BLACK
                         turn = WHITE
+                        tot_moves+=1
+                        
                         GAMEOVER = is_over(board, BLACK)
                         print("done")
                     
-                    print(f'Board Evaluation +ve:BLACK, -ve(WHITE): {evaluate(board)}')
-                    # print(board)
+                    
                     if GAMEOVER:
                         print('==============================================')
                         print("Black won!")
                         print('==============================================')
                         st="Player(Black) Has Won The Game"
-                        open_popup2(st)
+                        game_score = evaluate2(board,WHITE)
+                        print(game_score)
+                        fzy_result = fuzzy(tot_moves,game_score)
+                        print(fzy_result)
+                        st2="AI score: "+str(fzy_result)
+                        open_popup2(st,st2)
                         #restartgame()
                     if np.all(board):
                         st="The game finished in a draw"
-                        open_popup2(st)
+                        st2=""
+                        open_popup2(st,st2)
                         #restartgame()
                         print("Draw!")
             if turn == WHITE:
                 print("Loading Move")
-                timer_start = time.time()
                 make_move(board, WHITE)
                 GAMEOVER = is_over(board, WHITE)
-                # print('test1')
-                print_grid()
-                print(f'Board Evaluation +ve:BLACK, -ve(WHITE): {evaluate(board)}')
-                timer_end = time.time()
-                print(f'Time taken from AI = {timer_end - timer_start} Seconds')
-
-                # print(board)
+                
 
                 turn = BLACK
                 if GAMEOVER:
@@ -506,12 +650,18 @@ def play(event):
                     print("White won!")
                     print('==============================================')
                     st="AI(White) Has Won The Game"
-                    open_popup2(st)
+                    game_score = evaluate2(board,BLACK)
+                    print(game_score)
+                    fzy_result = fuzzy(tot_moves,game_score)
+                    print(fzy_result)
+                    st2="Player score: "+str(fzy_result)
+                    open_popup2(st,st2)
                     #restartgame()
                     
                 if np.all(board):
                     st="The game finished in a draw"
-                    open_popup2(st)
+                    st2=""
+                    open_popup2(st,st2)
                     #restartgame()
                     print("Draw!")
         elif choice == 3:
@@ -524,15 +674,21 @@ def play(event):
                             button["text"]="□"
                             board[row, col] = WHITE
                             turn = BLACK
+                            tot_moves+=1
                             GAMEOVER = is_over(board, WHITE)
-                    print(f'Board Evaluation +ve:BLACK, -ve(WHITE): {evaluate(board)}')
+                    #print(f'Board Evaluation +ve:BLACK, -ve(WHITE): {evaluate(board)}')
                     # print(board)
                     if GAMEOVER:
                         print('==============================================')
                         print("White won!")
                         print('==============================================')
                         st="Player(White) Has Won The Game"
-                        open_popup2(st)
+                        game_score = evaluate2(board,BLACK)
+                        print(game_score)
+                        fzy_result = fuzzy(tot_moves,game_score)
+                        print(fzy_result)
+                        st2="AI score: "+str(fzy_result)
+                        open_popup2(st,st2)
                         #restartgame()
                     if np.all(board):
                         st="The game finished in a draw"
@@ -541,14 +697,10 @@ def play(event):
                         print("Draw!")
             if turn == BLACK:
                 print("Loading Move")
-                timer_start = time.time()
+                
                 make_move(board, BLACK)
                 GAMEOVER = is_over(board, BLACK)
-                print(f'Board Evaluation +ve:BLACK, -ve(WHITE): {evaluate(board)}')
-                timer_end = time.time()
-                print(f'Time taken from AI = {timer_end - timer_start} Seconds')  #
-
-                # print(board)
+                
 
                 turn = WHITE
                 if GAMEOVER:
@@ -556,12 +708,18 @@ def play(event):
                     print("Black won!")
                     print('==============================================')
                     st="AI(Black) Has Won The Game"
-                    open_popup2(st)
+                    game_score = evaluate2(board,WHITE)
+                    print(game_score)
+                    fzy_result = fuzzy(tot_moves,game_score)
+                    print(fzy_result)
+                    st2="Player score: "+str(fzy_result)
+                    open_popup2(st,st2)
                     #restartgame()
                     
                 if np.all(board):
                     st="The game finished in a draw"
-                    open_popup2(st)
+                    st2=""
+                    open_popup2(st,st2)
                     #restartgame()
                     print("Draw!")
                     
